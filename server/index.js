@@ -27,6 +27,7 @@ app.get('/api/players', async (req, res) => {
         team: p.team || 'FA',
         age: p.age,
         years_exp: p.years_exp,
+        espn_id: p.espn_id || null,
       }));
 
     res.json(players);

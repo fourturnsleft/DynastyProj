@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import TradeSide from './TradeSide'
+import { DRAFT_PICKS } from '../data/draftPicks'
 
 const POSITION_COLORS = {
   QB: 'bg-red-500',
@@ -8,20 +9,17 @@ const POSITION_COLORS = {
   TE: 'bg-yellow-500',
 }
 
-// Dynasty value tiers based on position, age, experience
 function calcDynastyValue(player) {
   const posBase = { QB: 6000, RB: 5500, WR: 5800, TE: 5000 }
   const base = posBase[player.position] || 4000
   const age = player.age || 26
   const exp = player.years_exp ?? 3
 
-  // Rookies get a bonus — this is the "dynasty rookie" premium
   let value = base
   if (exp === 0) value += 1500
   else if (exp === 1) value += 800
   else if (exp === 2) value += 300
 
-  // Age decay — peaks at 24-26
   if (age <= 23) value += 1200
   else if (age <= 25) value += 600
   else if (age <= 27) value += 0
@@ -33,7 +31,7 @@ function calcDynastyValue(player) {
 }
 
 export default function TradeAnalyzer() {
-  const [players, setPlayers] = useState([])
+  const [searchItems, setSearchItems] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [sideA, setSideA] = useState([])
@@ -43,10 +41,12 @@ export default function TradeAnalyzer() {
     fetch('/api/players')
       .then(r => r.json())
       .then(data => {
-        const withValues = data
-          .map(p => ({ ...p, value: calcDynastyValue(p) }))
+        const players = data
+          .map(p => ({ ...p, type: 'player', value: calcDynastyValue(p) }))
           .sort((a, b) => b.value - a.value)
-        setPlayers(withValues)
+
+        // Merge players + draft picks into one searchable list
+        setSearchItems([...players, ...DRAFT_PICKS])
         setLoading(false)
       })
       .catch(() => {
@@ -98,7 +98,7 @@ export default function TradeAnalyzer() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <TradeSide
           label="Side A"
-          players={players}
+          items={searchItems}
           selected={sideA}
           setSelected={setSideA}
           total={totalA}
@@ -107,7 +107,7 @@ export default function TradeAnalyzer() {
         />
         <TradeSide
           label="Side B"
-          players={players}
+          items={searchItems}
           selected={sideB}
           setSelected={setSideB}
           total={totalB}
