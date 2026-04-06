@@ -1,0 +1,9 @@
+{
+  "name": "dynastyproj",
+  "version": "1.0.0",
+  "scripts": {
+    "server": "cd server && node index.js",
+    "client": "cd client && npm run dev",
+    "dev": "npm run server & npm run client"
+  }
+}
